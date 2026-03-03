@@ -1,4 +1,4 @@
-import time, os, enum, csv
+import os, enum, csv, urllib.request
 import operations
 
 # To-Do: maybve keep order of procresses (a stack) for dispalying finished processes
@@ -34,13 +34,20 @@ def main():
         url = getNewUrl()
 
         while url in seen_urls:
-            url = getNewUrl
+            url = getNewUrl()
 
         if not url: break
 
-        stack.append(Thread(url[0], *url[1]))
-
         seen_urls.add(url[0])
+
+        content = scrapeContnet(url[0])
+
+        if not content: 
+            failed_urls.add(url[0])
+        
+        else:
+            stack.append(Thread(url[0], *url[1]))
+            stack[len(stack) - 1].content = content
 
         showStack()
         workCurrentThread()
@@ -57,8 +64,20 @@ def getNewUrl() -> str | bool:
 
     except StopIteration as e:
         return False
+    
+def scrapeContnet(url: str) -> str | bool:
+    try:
+        with urllib.request.urlopen(url) as response:
+            html_content_bytes = response.read()
+
+            return html_content_bytes.decode('utf-8')
+
+    except urllib.error.HTTPError as e: return False
+    except urllib.error.URLError as e: return False
+    except urllib.error.IncompleteRead as e: return False
 
 # To-Do: clean method
+# To-Do: change the name of url
 def showStack():
     os.system('cls')
 
@@ -95,12 +114,8 @@ def showStack():
     else:
         print("NULL")
 
-def workCurrentThread(): # To-Do: limit opertions to 5 seconds
-    # startTime = time.perf_counter()
-
-    # while (time.perf_counter() < (startTime + 5)):
-        # if len(stack[0].operations): doOperation()
-        # else: break
+def workCurrentThread():
+    if not len(stack): return
 
     if len(stack[0].operations): doOperation()
 
