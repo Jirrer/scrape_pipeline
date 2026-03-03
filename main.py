@@ -7,19 +7,9 @@ class Thread:
 seen_urls = set()
 stack: list[Thread] = []
 
-urls = iter([
-    'https://www.google.com',
-    'https://www.youtube.com',
-    'https://www.wikipedia.org',
-    'https://www.amazon.com',
-    'https://www.reddit.com',
-    'https://www.twitter.com',
-    'https://www.instagram.com',
-    'https://www.linkedin.com',
-    'https://www.netflix.com',
-    'https://www.microsoft.com'
-])
-
+def setUrls():
+    with open('urls.txt', 'r', newline='') as file:
+        return iter([row.replace('\r', '').replace('\n', '') for row in file])
 
 def main():
     while (True):
@@ -75,5 +65,7 @@ def showStack():
     if len(finishedUrls): print([U for U in finishedUrls])
     else: print("NULL")
 
+
 if __name__ == "__main__":
+    urls = setUrls()
     main()
