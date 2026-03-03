@@ -1,31 +1,45 @@
-import time, os, random
+import time, os, enum, csv
+import operations
+
+# To-Do: maybve keep order of procresses (a stack) for dispalying finished processes
+
+class Operation(enum.Enum):
+    sort = "sort"
+    filter = 'filter'
 
 class Thread:
-    def __init__(self, url):
+    def __init__(self, url, *operations: Operation):
         self.url = url
-        self.completion = 0.00
+        self.operations = [o for o in operations]
         self.content = None
         self.workingLine = 0
 
+        if len(self.operations): self.completion = 0.00
+        else: self.completion = 100.00
+
 seen_urls = set()
+failed_urls = set()
 stack: list[Thread] = []
 
-def setUrls():
-    with open('urls.txt', 'r', newline='') as file:
-        return iter([row.replace('\r', '').replace('\n', '') for row in file])
 
+def setUrls():
+    with open('urls.csv', 'r', newline='') as file:
+        reader = csv.reader(file)
+
+        return iter([(row[0], tuple(row[1:])) for row in reader])
+    
 def main():
     while (True):
         url = getNewUrl()
 
-        while url  in seen_urls:
+        while url in seen_urls:
             url = getNewUrl
 
         if not url: break
 
-        stack.append(Thread(url))
+        stack.append(Thread(url[0], *url[1]))
 
-        seen_urls.add(url)
+        seen_urls.add(url[0])
 
         showStack()
         workCurrentThread()
@@ -43,6 +57,7 @@ def getNewUrl() -> str | bool:
     except StopIteration as e:
         return False
 
+# To-Do: clean method
 def showStack():
     os.system('cls')
 
@@ -56,7 +71,7 @@ def showStack():
 
     else: print("NULL")
 
-    print("\n*** Finished Processes")
+    print("\n*** Finished Processes ***")
     activeUrls = set([T.url for T in stack])
 
     finishedUrls = []
@@ -66,32 +81,42 @@ def showStack():
             finishedUrls.append(url)
 
     if len(finishedUrls): 
-        for url in finishedUrls:
-            print(url)
+        for url in finishedUrls :
+            if url not in failed_urls: print(url)
 
-    else: print("NULL\n")
+    else: print("NULL")
+
+    print("\n*** Failed Processes ***") 
+    if len(finishedUrls): 
+        for url in finishedUrls:
+            if url in failed_urls: print(url)
+
+    else:
+        print("NULL")
+
 
 def workCurrentThread():
     startTime = time.perf_counter()
 
-    while (time.perf_counter() < (startTime + 3)):
-        doOperation()
+    while (time.perf_counter() < (startTime + 5)):
+        if len(stack[0].operations): doOperation()
+        else: break
 
     if stack[0].completion == 100.00:
         stack.pop(0) # big O(n)
 
 def doOperation():
-    time.sleep(random.randint(0, 3))
+    match (stack[0].operations.pop()):
+        case Operation.sort.value: outcome = operations.sort()
+        case Operation.filter.value: outcome = operations.filter()
+        case _: outcome = False
 
-    completionTimes = [10, 25, 50, 75, 100]
+    if not (outcome):
+        failed_urls.add(stack[0].url)
 
-    stack[0].completion += completionTimes[random.randint(0, 4)]
+    # To-Do: update completion here
 
-    if stack[0].completion > 100.00:
-        stack[0].completion = 100.00
-
-    return
-
+    if not len(stack[0].operations): stack[0].completion = 100.00 
 
 if __name__ == "__main__":
     urls = setUrls()
