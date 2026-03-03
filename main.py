@@ -1,8 +1,11 @@
-import time, os
+import time, os, random
 
 class Thread:
     def __init__(self, url):
         self.url = url
+        self.completion = 0.00
+        self.content = None
+        self.workingLine = 0
 
 seen_urls = set()
 stack: list[Thread] = []
@@ -25,13 +28,13 @@ def main():
         seen_urls.add(url)
 
         showStack()
-
-        time.sleep(1)
+        workCurrentThread()
 
     while (len(stack)):
         showStack()
+        workCurrentThread()
 
-        time.sleep(1)
+    showStack()
 
 def getNewUrl() -> str | bool:
     try:
@@ -44,7 +47,7 @@ def showStack():
     os.system('cls')
 
     print("*** Running Procress *** ")
-    if len(stack): print(stack[0].url)
+    if len(stack): print(f'{stack[0].url} - {stack[0].completion}%')
     else: print("NULL")
 
     print("\n*** Waiting Processes ***")
@@ -62,8 +65,32 @@ def showStack():
         if url not in activeUrls: 
             finishedUrls.append(url)
 
-    if len(finishedUrls): print([U for U in finishedUrls])
-    else: print("NULL")
+    if len(finishedUrls): 
+        for url in finishedUrls:
+            print(url)
+
+    else: print("NULL\n")
+
+def workCurrentThread():
+    startTime = time.perf_counter()
+
+    while (time.perf_counter() < (startTime + 3)):
+        doOperation()
+
+    if stack[0].completion == 100.00:
+        stack.pop(0) # big O(n)
+
+def doOperation():
+    time.sleep(random.randint(0, 3))
+
+    completionTimes = [10, 25, 50, 75, 100]
+
+    stack[0].completion += completionTimes[random.randint(0, 4)]
+
+    if stack[0].completion > 100.00:
+        stack[0].completion = 100.00
+
+    return
 
 
 if __name__ == "__main__":
