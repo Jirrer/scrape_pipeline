@@ -2,6 +2,7 @@ import time, os, enum, csv
 import operations
 
 # To-Do: maybve keep order of procresses (a stack) for dispalying finished processes
+# To-Do: make operation cut off and keep track of progress
 
 class Operation(enum.Enum):
     sort = "sort"
@@ -13,6 +14,7 @@ class Thread:
         self.operations = [o for o in operations]
         self.content = None
         self.workingLine = 0
+        self.numOperations = len(operations)
 
         if len(self.operations): self.completion = 0.00
         else: self.completion = 100.00
@@ -20,7 +22,6 @@ class Thread:
 seen_urls = set()
 failed_urls = set()
 stack: list[Thread] = []
-
 
 def setUrls():
     with open('urls.csv', 'r', newline='') as file:
@@ -94,18 +95,20 @@ def showStack():
     else:
         print("NULL")
 
+def workCurrentThread(): # To-Do: limit opertions to 5 seconds
+    # startTime = time.perf_counter()
 
-def workCurrentThread():
-    startTime = time.perf_counter()
+    # while (time.perf_counter() < (startTime + 5)):
+        # if len(stack[0].operations): doOperation()
+        # else: break
 
-    while (time.perf_counter() < (startTime + 5)):
-        if len(stack[0].operations): doOperation()
-        else: break
+    if len(stack[0].operations): doOperation()
 
     if stack[0].completion == 100.00:
         stack.pop(0) # big O(n)
 
 def doOperation():
+    # To-Do: add peek functionality
     match (stack[0].operations.pop()):
         case Operation.sort.value: outcome = operations.sort()
         case Operation.filter.value: outcome = operations.filter()
@@ -114,7 +117,7 @@ def doOperation():
     if not (outcome):
         failed_urls.add(stack[0].url)
 
-    # To-Do: update completion here
+    stack[0].completion += 100 * (1 / stack[0].numOperations)
 
     if not len(stack[0].operations): stack[0].completion = 100.00 
 
