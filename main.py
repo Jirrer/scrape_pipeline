@@ -3,9 +3,10 @@ import operations
 
 # To-Do: maybve keep order of procresses (a stack) for dispalying finished processes
 # To-Do: make operation cut off and keep track of progress
+# To-Do: add a 'stack overflow' error if an operation is repeated too many times
 
 class Operation(enum.Enum):
-    sort = "sort"
+    linearSearch = "linearSearch"
     filter = 'filter'
 
 class Thread:
@@ -125,16 +126,17 @@ def workCurrentThread():
 def doOperation():
     # To-Do: add peek functionality
     match (stack[0].operations.pop()):
-        case Operation.sort.value: outcome = operations.sort()
-        case Operation.filter.value: outcome = operations.filter()
+        case Operation.linearSearch.value: outcome = operations.linearSearch(stack[0])
+        case Operation.filter.value: outcome = operations.filter(stack[0])
         case _: outcome = False
 
-    if not (outcome):
+    if outcome == False:
         failed_urls.add(stack[0].url)
 
-    stack[0].completion += 100 * (1 / stack[0].numOperations)
+    elif outcome == True:
+        stack[0].completion += 100 * (1 / stack[0].numOperations)
 
-    if not len(stack[0].operations): stack[0].completion = 100.00 
+        if not len(stack[0].operations): stack[0].completion = 100.00 
 
 if __name__ == "__main__":
     urls = setUrls()
