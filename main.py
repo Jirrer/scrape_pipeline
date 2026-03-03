@@ -1,12 +1,13 @@
-import os, enum, csv, urllib.request
+import os, enum, csv, urllib.request, random
 import operations
 
 # To-Do: maybve keep order of procresses (a stack) for dispalying finished processes
 # To-Do: make operation cut off and keep track of progress
-# To-Do: add a 'stack overflow' error if an operation is repeated too many times
+# To-Do: add a 'stack overflow' error if an operation is repeated too many times <-- important
 
 class Operation(enum.Enum):
-    linearSearch = "linearSearch"
+    linearSearch = 'linearSearch'
+    binarySearch = 'binarySearch'
     filter = 'filter'
 
 class Thread:
@@ -75,7 +76,7 @@ def scrapeContnet(url: str) -> str | bool:
 
     except urllib.error.HTTPError as e: return False
     except urllib.error.URLError as e: return False
-    except urllib.error.IncompleteRead as e: return False
+    except urllib.error.AttributeError as e: return False
 
 # To-Do: clean method
 # To-Do: change the name of url
@@ -126,9 +127,17 @@ def workCurrentThread():
 def doOperation():
     # To-Do: add peek functionality
     match (stack[0].operations.pop()):
-        case Operation.linearSearch.value: outcome = operations.linearSearch(stack[0])
-        case Operation.filter.value: outcome = operations.filter(stack[0])
-        case _: outcome = False
+        case Operation.linearSearch.value: 
+            outcome = operations.linearSearch(stack[0], random.choice(list(set(stack[0].content.split(' ')))))
+
+        case Operation.binarySearch.value: 
+            outcome = operations.binarySearch(stack[0], random.choice(list(set(stack[0].content.split(' ')))))
+
+        case Operation.filter.value: 
+            outcome = operations.filter(stack[0])
+
+        case _: 
+            outcome = False
 
     if outcome == False:
         failed_urls.add(stack[0].url)
