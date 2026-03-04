@@ -25,12 +25,27 @@ def binarySearch(thread, searchElement) -> bool | None:
 
     parsedContnet = thread.content.split(" ")
 
+    sortedList = parsedContnet.sort() # move to loop
 
+    l = thread.workingLine
+    h = len(sortedList) - 1
+    while (time.perf_counter() < startTime + 5 or l <= h):
+        mid = (l + h) // 2
 
-    
-    
+        if sortedList[mid] == searchElement: return True
+        elif sortedList[mid] < searchElement: h = mid - 1
+        else: l = mid + 1
 
-    return True
+        index += 1
+
+    if l > h:
+        return False
+
+    thread.workingLine = index
+
+    thread.content = ''.join(sortedList[l:h])
+
+    return None
 
 def filter(thead) -> bool:
     time.sleep(3)
